@@ -1,11 +1,12 @@
 import requests
 import argparse
-import tkinter
+import sqlite3
 import time
 from pathlib import Path
 from bs4 import BeautifulSoup 
 import json
 import sys
+import re
 
 
 #-----------------------------------------------------------------------------------------------
@@ -13,9 +14,39 @@ if getattr(sys, 'frozen', False):
     bd = Path(sys.executable).parent
 else:
     bd = Path(__file__).resolve().parent
-od = bd / "scrapes"
-od.mkdir(exist_ok=True)
+original_directory = bd / "scrapes"
+datab = bd / "prices.db"
+original_directory.mkdir(exist_ok=True)
+connection = sqlite3.connect(datab)
+cursor = connection.cursor()
 runtime = time.strftime("%d_%m_%Y$%H_%M_%S")
+def init_db():
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            asin TEXT PRIMARY KEY,
+            name TEXT,
+            link TEXT,
+            first_seen TEXT,
+            region TEXT
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS price_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asin TEXT,
+            price INTEGER,
+            rating TEXT,
+            timestamp TEXT,
+            query TEXT,
+            region TEXT,
+            FOREIGN KEY (asin) REFERENCES products(asin)
+        )
+    """)
+
+    connection.commit()
+
+init_db()
 custom_headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36',
 }
@@ -67,12 +98,10 @@ AMAZON_REGIONS = {
     "ae": "United_Arab_Emirates",
     "sa": "Saudi_Arabia",
 }
-
-
-products = []
-seen_asins = set()
-total_searched =0
-pages_searched = 0
+PRODUCT_LIST = []
+SEEN_ASINS = set()
+TOTAL_SEARCHED =0
+PAGES_SEARCHED = 0
 #-----------------------------------------------------------------------------------------------
 def parseargs():
     parser = argparse.ArgumentParser(description="Amazon Scraper")
@@ -80,68 +109,83 @@ def parseargs():
     parser.add_argument("max_pages", type=int, help="Maximum number of pages to scrape. Default: unlimited/amazon limits",nargs='?',default=999)
     parser.add_argument("region",type=str,help="Region to scrape. Default: us",nargs='?',default="us")
     return parser.parse_args()
-
 args = parseargs()
-original_query = args.query
-original_pages = args.max_pages
-reg = args.region.lower()
-if reg not in AMAZON_DOMAINS:
+FIRSTQUERY = args.query
+MAXPAGES = args.max_pages
+REGION = args.region.lower()
+if REGION not in AMAZON_DOMAINS:
     print("Invalid region. Choose from:", ", ".join(AMAZON_DOMAINS.keys()))
     sys.exit(1)
-domain = AMAZON_DOMAINS[reg]
-final_query = original_query.replace(" ", "+").strip() 
-url = f"https://www.{domain}/s?k={final_query}"   
+DOMAIN = AMAZON_DOMAINS[REGION]
+FINAL_QUERY = FIRSTQUERY.replace(" ", "+").strip() 
+URL = f"https://www.{DOMAIN}/s?k={FINAL_QUERY}"   
 #-----------------------------------------------------------------------------------------------
 def analyse(url,products):
     session = requests.Session()
     session.headers.update(custom_headers)
-    global total_searched
-    global pages_searched
+    global TOTAL_SEARCHED
+    global PAGES_SEARCHED
     while True:
         response = session.get(url, timeout=15)
         if response.status_code==200:
             if "Robot Check" in response.text:
                 print("Blocked by Amazon.")
                 break
-            if pages_searched >= original_pages:
+            if PAGES_SEARCHED >= MAXPAGES:
                 break
             
             soup = BeautifulSoup(response.content, "html.parser")
-            itemlist = soup.find_all("div", {"data-component-type": "s-search-result"})
-            next_tag = soup.select_one("a.s-pagination-next")
-            currlen = len(itemlist)
-            total_searched += currlen
-            pages_searched+=1
-            print(f"NUMBER OF ITEMS FOUND - {currlen}")
-            print(f"TOTAL ITEMS SCANNED - {total_searched}")
-            print(f"PAGE NUMBER - {pages_searched}")
-            for item in itemlist:
+            web_items = soup.find_all("div", {"data-component-type": "s-search-result"})
+            next_page_tag = soup.select_one("a.s-pagination-next")
+            web_items_len = len(web_items)
+            TOTAL_SEARCHED += web_items_len
+            PAGES_SEARCHED+=1
+            print(f"NUMBER OF ITEMS FOUND - {web_items_len}")
+            print(f"TOTAL ITEMS SCANNED - {TOTAL_SEARCHED}")
+            print(f"PAGE NUMBER - {PAGES_SEARCHED}")
+            for item in web_items:
                 try:
+                    link = None 
                     name_tag =item.find("h2")
                     name = name_tag.text.strip() if name_tag else "N/A"
+                    
                     price_tag = item.select_one("span.a-price-whole")
-                    price_point = item.select_one("span.a-price-symbol")
-                    p1 =price_point.text.strip() if price_point else "N/A"
-                    p2 = price_tag.text.strip() if price_tag else "N/A"
-                    asin = item.get("data-asin")
-                    if not asin or asin in seen_asins:
+                    price_symbol = item.select_one("span.a-price-symbol")
+                    
+                    symbol =price_symbol.text.strip() if price_symbol else "N/A"
+                    amount = price_tag.text.strip() if price_tag else "N/A"
+                    price = f"{symbol}{amount}"
+                    if amount and amount != "N/A":
+                        clean = re.sub(r"[^\d]", "", amount)
+                        price_num = int(clean) if clean else None
+                    else:
+                        price_num = None
+                    
+                    asin_id = item.get("data-asin")
+                    if not asin_id or asin_id in SEEN_ASINS:
                         continue
-                    seen_asins.add(asin)
-
-                    price = f"{p1}{p2}"
+                    SEEN_ASINS.add(asin_id)
+                    
                     rating_tag =item.select_one(".a-icon-alt")
                     rating = rating_tag.text.strip() if rating_tag else "N/A"
-                    produrl1 = None
-                    produrl0 = item.find("h2")
-                    if produrl0:
-                        produrl1 = produrl0.find_parent("a")
-                    if not produrl1:
-                        produrl1 = item.select_one("a[href*='/dp/']")
-                    product_url = produrl1.get("href") if produrl1 else None
-                    if product_url and product_url.startswith("http"):
-                        link = product_url
-                    else:
-                        link = f"https://www.{domain}{product_url}"
+
+                    
+                    url_h2_parent = None
+                    url_h2_tag = item.find("h2")
+                    if url_h2_tag:
+                        url_h2_parent = url_h2_tag.find_parent("a")
+                    
+                    if not url_h2_parent:
+                        url_h2_parent = item.select_one("a[href*='/dp/']")
+                    final_url = url_h2_parent.get("href") if url_h2_parent else None
+                    if final_url and final_url.startswith("http"):
+                        link = final_url
+                    elif final_url:
+                        link = f"https://www.{DOMAIN}{final_url}"
+                    cursor.execute("""INSERT OR IGNORE INTO products (asin, name, link, first_seen, region) VALUES (?, ?, ?, ?, ?)""", (asin_id,name,link,runtime,REGION))
+
+                    cursor.execute("""INSERT INTO price_history (asin,price,rating,timestamp,query,region) VALUES (?, ?, ?, ?, ?, ?)""", (asin_id,price_num,rating,runtime,FIRSTQUERY,REGION))
+
                     products.append({
                 "name": name,
                 "price": price,
@@ -151,33 +195,36 @@ def analyse(url,products):
                 except Exception as e:
                     print("Exception",e)
                     continue
-            
-            if next_tag:
-                next_page = next_tag.get("href")
+            connection.commit()
+
+            if next_page_tag:
+                next_page = next_page_tag.get("href")
                 if next_page.startswith("http"):
-                    new_url = next_page
+                    next_page_url = next_page
                 else:
-                    new_url = f"https://www.{domain}{next_page}"
-                url = new_url
-                print("NEXT PAGE:", new_url)
+                    next_page_url = f"https://www.{DOMAIN}{next_page}"
+                url = next_page_url
+                print("NEXT PAGE:", next_page_url)
             else:
                 print("NO NEXT PAGE")
                 break
 
-def output(od, runtime, final_query, products, total_searched):
+def output(output_directory, runtime, final_query, products, total_searched):
     rtf1 = runtime.split("$")
     date,time = rtf1[0],rtf1[1] 
     runtime_formatted= date.replace("_","/")+" "+time.replace("_",":")
-    with open(od / f"{AMAZON_REGIONS[reg]}_{final_query}_{runtime}.txt", "a", encoding="utf-8") as f:
-        f.write(f"#query={final_query}\n#region={args.region}\n#totalsearched={total_searched}\n#pagessearched={pages_searched}\n#runtime={runtime_formatted}\n")
+    with open(output_directory / f"{AMAZON_REGIONS[REGION]}_{final_query}_{runtime}.txt", "a", encoding="utf-8") as f:
+        f.write(f"#query={final_query}\n#region={args.region}\n#totalsearched={total_searched}\n#pagessearched={PAGES_SEARCHED}\n#runtime={runtime_formatted}\n")
         if not products:
             f.write("No products found.\n")
         else:
             json.dump(products, f, ensure_ascii=False, indent=2)
 #-----------------------------------------------------------------------------------------------
 if __name__ == "__main__":
-    analyse(url,products)
-    output(od, runtime, final_query, products, total_searched)
-    print(f"FILE PATH LOCATED AT - {od / f'products_{final_query}_{runtime}.txt'}")
+    analyse(URL,PRODUCT_LIST)
+    output(original_directory, runtime, FINAL_QUERY, PRODUCT_LIST, TOTAL_SEARCHED)
+    connection.close()
+    print(f"FILE PATH LOCATED AT - {original_directory / f'products_{FINAL_QUERY}_{runtime}.txt'}")
+
 
 #-----------------------------------------------------------------------------------------------
