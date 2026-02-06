@@ -10,10 +10,10 @@ badges = []
 cursor = None
 
 def notification(directory,badges):
-    toast = Notification(app_id="Roblox Badge Dumper",title="Roblox Badge Dumper",msg= f"Badge Dump Complete!\nBadges Dumped: {badges}",icon=r"c:\path\to\icon.png")
+    icon_path = os.path.join(os.path.dirname(__file__), "assets","icon.png")
+    toast = Notification(app_id="Roblox Badge Dumper",title=f"""{"✅Badge Dump Complete!✅" if badges>0 else "❌Badge Dump Incomplete!❌"}""",msg= f"""Badges Dumped: {badges}\nInventory Status: {'Private' if badges==0 else 'Public'}""",icon=icon_path)
     toast.set_audio(audio.Reminder, loop=False)
     toast.add_actions(label="Open Folder",launch=str(directory))
-    toast.add_actions(label="Open Github",launch=(str("https://github.com/TheHiddenCoder001/Python-Projects/tree/main/RobloxBadgeDumper")))
     toast.show()
 
 #------------------------------------------------------------
@@ -77,13 +77,14 @@ else:
     cursor_db.execute('''
     CREATE TABLE IF NOT EXISTS badges (name TEXT, website_link TEXT,id INTEGER PRIMARY KEY)''')
     conn.commit()
+
     for badge in badges:
         link = f"https://www.roblox.com/badges/{badge['id']}/"
         cursor_db.execute("INSERT OR IGNORE INTO badges (name, website_link, id) VALUES (?, ?, ?)", (badge['name'], link, badge['id']))
     conn.commit()
     cursor_db.execute("SELECT COUNT(*) FROM badges")
     total_badges = cursor_db.fetchone()[0]
-    
+
     print(f"Database updated. Total badges in DB: {total_badges}")
     print(f"File located at {user_directory}")
     notification(user_directory,total_badges)
