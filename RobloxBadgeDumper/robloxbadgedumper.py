@@ -1,8 +1,4 @@
-import requests
-import os
-import argparse
-import sqlite3
-import json
+import requests,os,argparse,sqlite3,json,csv
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from winotify import *
@@ -22,9 +18,9 @@ def notification(directory,badges,isbanned=False,username=None):
 
 #------------------------------------------------------------
 def parse():
-    parser = argparse.ArgumentParser(description="CLI tool for checking a users badges. Output in .txt file (0)/ .db file (1)")
+    parser = argparse.ArgumentParser(description="CLI tool for checking a users badges. Output in .csv file (0)/ .db file (1)")
     parser.add_argument("username", type=str,help="Username to check")
-    parser.add_argument("output",type=int,help="Way to output (0=txt file, 1=db file),",nargs='?',default=0)
+    parser.add_argument("output",type=str,help="Way to output (args = csv/db (case insensitive)),",nargs='?',default=csv)
     return parser.parse_args()
 parser = parse()
 #------------------------------------------------------------
@@ -73,20 +69,21 @@ while True:
         print("Finished")
         pbar.close()
         break
-#------------------------------------------------------------
-if parser.output == 0:
+#------------------------------------------------------------ EXPORT LOGIC
+if parser.output.lower() == "csv":
     if len(badges)==0:
         notification(user_directory,len(badges))
         exit()
     else:
-        with open(os.path.join(user_directory, "badges.txt"), "w", encoding="utf-8") as f:
-            for badge in tqdm(badges, desc="Writing text file"):
-                link = f"https://www.roblox.com/badges/{badge['id']}/"
-                json.dump(badge, f, ensure_ascii=False)
-        print(f"Text file updated with {len(badges)} badges.")
+        keys = badges[0].keys()
+        with open(os.path.join(user_directory, "badges.csv"), "w", newline='',encoding="utf-8") as f:
+             dict_writer = csv.DictWriter(f, keys)
+             dict_writer.writeheader()
+             dict_writer.writerows(badges)
+        print(f"CSV file updated with {len(badges)} badges.")
         print(f"File located at {user_directory}")
         notification(user_directory,len(badges),False,name)
-else:
+elif parser.output.lower() == "db":
     if len(badges)==0:
                 notification(user_directory,len(badges),False,name)
                 exit()
@@ -107,6 +104,9 @@ else:
         print(f"File located at {user_directory}")
         notification(user_directory,len(badges),False,name)
         conn.close()
+else:
+    print("Invalid output type")
+    exit()
 
 #------------------------------------------------------------
 
