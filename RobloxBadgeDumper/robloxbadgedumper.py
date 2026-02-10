@@ -1,7 +1,11 @@
-import requests,os,argparse,sqlite3,json,csv
+import requests
+import os
+import argparse
+import sqlite3
+import csv 
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from winotify import *
+from winotify import Notification,audio
 from tqdm import tqdm
 badges = []
 cursor = None
@@ -9,7 +13,7 @@ cursor = None
 def notification(directory,badges,isbanned=False,username=None):
     icon_path = os.path.join(os.path.dirname(__file__), "assets","icon.png")
     if isbanned:
-            toast = Notification(app_id="Roblox Badge Dumper",title=f"""{"❌Badge Dump Incomplete!❌"}""",msg=f"""Account Has Been Terminated""" ,icon=icon_path)
+            toast = Notification(app_id="Roblox Badge Dumper",title=f"""{"❌Badge Dump Incomplete!❌"}""",msg="""Account Has Been Terminated""" ,icon=icon_path)
     else:
         toast = Notification(app_id="Roblox Badge Dumper",title=f"""{"✅Badge Dump Complete!✅" if badges>0 else "❌Badge Dump Incomplete!❌"}""",msg= f"""Name = {username}\nBadges Dumped: {badges}\n{"Inventory Status: Private" if badges==0 else "Inventory Status: Public" if badges>0 else"Error Occured"}""",icon=icon_path)
     toast.set_audio(audio.Mail, loop=False)
@@ -20,7 +24,7 @@ def notification(directory,badges,isbanned=False,username=None):
 def parse():
     parser = argparse.ArgumentParser(description="CLI tool for checking a users badges. Output in .csv file (0)/ .db file (1)")
     parser.add_argument("username", type=str,help="Username to check")
-    parser.add_argument("output",type=str,help="Way to output (args = csv/db (case insensitive)),",nargs='?',default=csv)
+    parser.add_argument("output",type=str,help="Way to output (args = csv/db (case insensitive)),",nargs='?',default="csv")
     return parser.parse_args()
 parser = parse()
 #------------------------------------------------------------
@@ -83,6 +87,8 @@ if parser.output.lower() == "csv":
         print(f"CSV file updated with {len(badges)} badges.")
         print(f"File located at {user_directory}")
         notification(user_directory,len(badges),False,name)
+
+
 elif parser.output.lower() == "db":
     if len(badges)==0:
                 notification(user_directory,len(badges),False,name)

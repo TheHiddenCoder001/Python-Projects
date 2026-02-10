@@ -1,7 +1,6 @@
 import threading,sys,psutil,time,random,os
 from winotify import Notification,audio
 from pystray import Icon, MenuItem as item
-from pystray import Icon
 from PIL import Image
 
 

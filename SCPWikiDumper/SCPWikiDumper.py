@@ -1,5 +1,8 @@
-import os,requests,re,argparse
-from playwright.sync_api import sync_playwright, TimeoutError
+import os
+import requests
+import re
+import argparse
+from playwright.sync_api import sync_playwright
 from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor
 from winotify import Notification,audio

@@ -1,4 +1,11 @@
-import requests,argparse,sqlite3,time,json,sys,re,os
+import requests
+import argparse
+import sqlite3
+import time
+import json
+import sys
+import re
+import os
 from pathlib import Path
 from bs4 import BeautifulSoup 
 from winotify import Notification,audio
