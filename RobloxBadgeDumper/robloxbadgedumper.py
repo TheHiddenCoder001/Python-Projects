@@ -1,8 +1,4 @@
-import requests
-import os
-import argparse
-import sqlite3
-import csv 
+import requests,os,argparse,sqlite3,csv
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from winotify import Notification,audio
