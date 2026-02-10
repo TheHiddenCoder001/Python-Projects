@@ -1,13 +1,7 @@
-import requests
-import argparse
-import sqlite3
-import time
+import requests,argparse,sqlite3,time,json,sys,re,os
 from pathlib import Path
 from bs4 import BeautifulSoup 
-import json
-import sys
-import re
-
+from winotify import Notification,audio
 
 #-----------------------------------------------------------------------------------------------
 if getattr(sys, 'frozen', False):
@@ -107,7 +101,7 @@ def parseargs():
     parser = argparse.ArgumentParser(description="Amazon Scraper")
     parser.add_argument("query", type=str, help="Search query")
     parser.add_argument("max_pages", type=int, help="Maximum number of pages to scrape. Default: unlimited/amazon limits",nargs='?',default=999)
-    parser.add_argument("region",type=str,help="Region to scrape. Default: us",nargs='?',default="us")
+    parser.add_argument("region",type=str,help="Region to scrape. Default: us",nargs='?',default="in")
     return parser.parse_args()
 args = parseargs()
 FIRSTQUERY = args.query
@@ -219,12 +213,21 @@ def output(output_directory, runtime, final_query, products, total_searched):
             f.write("No products found.\n")
         else:
             json.dump(products, f, ensure_ascii=False, indent=2)
+    
 #-----------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     analyse(URL,PRODUCT_LIST)
     output(original_directory, runtime, FINAL_QUERY, PRODUCT_LIST, TOTAL_SEARCHED)
     connection.close()
+    filepath = original_directory / f'products_{FINAL_QUERY}_{runtime}.txt'
     print(f"FILE PATH LOCATED AT - {original_directory / f'products_{FINAL_QUERY}_{runtime}.txt'}")
-
+    
+    toast = Notification(app_id="Amazon Scraper",title="Amazon Scraper",msg="Amazon Scrape Complete!",icon=r"c:\path\to\icon.png")
+    toast.set_audio(audio.Mail, loop=False)
+    toast.add_actions(label="Open File",launch=str(filepath))
+    toast.show()
+    print(filepath)
+    print(filepath.exists())
+    os.startfile(filepath)
 
 #-----------------------------------------------------------------------------------------------
