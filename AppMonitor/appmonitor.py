@@ -2,7 +2,8 @@ import threading,sys,psutil,time,random,os
 from winotify import Notification,audio
 from pystray import Icon, MenuItem as item
 from PIL import Image
-
+import win32gui
+import win32con
 
 quotes = [
     "You have power over your mind — not outside events. Realize this, and you will find strength.",
@@ -17,10 +18,14 @@ quotes = [
 
 
 
+videos = os.path.join(os.path.dirname(__file__),"assets","videos")
+if not os.path.exists(videos):
+    os.mkdir(videos)
 
 
 def main(target):
     target_list = target.split(" ")
+    video_files = [f for f in os.listdir(videos) if os.path.isfile(os.path.join(videos, f))]
     try:
         print("Running now...")
         running = True
@@ -34,10 +39,18 @@ def main(target):
                 time.sleep(0.5)
         
         def notification(target_name,sendQuote=True):
+            vid = os.path.join(videos,random.choice(video_files))
             toast = Notification(app_id="App Monitor",title="Is this really where you want to be?",msg=f"""You tried opening {target_name}\n{random.choice(quotes) if sendQuote else "" }""",icon=f"{os.path.join(os.path.dirname(__file__), 'assets', 'icon.png')}")
             toast.set_audio(audio.Mail, loop=False)
             print(toast.script)
             toast.show()
+            def run_video(window_title):
+                os.startfile(window_title)
+                time.sleep(0.5)
+                hwnd = win32gui.FindWindow(None, window_title)
+                if hwnd:
+                    win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+            run_video(vid)
 
         def kill():
             nonlocal running
