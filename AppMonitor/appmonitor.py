@@ -40,10 +40,10 @@ def main(target):
         
         def notification(target_name,sendQuote=True):
             vid = os.path.join(videos,random.choice(video_files))
-            toast = Notification(app_id="App Monitor",title="Is this really where you want to be?",msg=f"""You tried opening {target_name}\n{random.choice(quotes) if sendQuote else "" }""",icon=f"{os.path.join(os.path.dirname(__file__), 'assets', 'icon.png')}")
-            toast.set_audio(audio.Mail, loop=False)
-            print(toast.script)
-            toast.show()
+            # toast = Notification(app_id="App Monitor",title="Is this really where you want to be?",msg=f"""You tried opening {str(target_name)}\n{random.choice(quotes) if sendQuote else "" }""",icon=f"{os.path.join(os.path.dirname(__file__), 'assets', 'icon.png')}")
+            # toast.set_audio(audio.Mail, loop=False)
+            # print(toast.script)
+            # toast.show()
             def run_video(window_title):
                 os.startfile(window_title)
                 time.sleep(0.5)
