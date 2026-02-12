@@ -1,9 +1,10 @@
-import threading,sys,psutil,time,random,os
+import threading,sys,psutil,time,random,os,pyautogui,logging 
 from winotify import Notification,audio
 from pystray import Icon, MenuItem as item
 from PIL import Image
 import win32gui
 import win32con
+import win32com.client
 
 quotes = [
     "You have power over your mind — not outside events. Realize this, and you will find strength.",
@@ -16,18 +17,19 @@ quotes = [
     "Victory belongs to the most persevering."
 ]
 
-
-
 videos = os.path.join(os.path.dirname(__file__),"assets","videos")
-if not os.path.exists(videos):
-    os.mkdir(videos)
+logs = os.path.join(os.path.join(os.path.dirname(__file__),"logs"))
+for thing in [videos,logs]:
+    if not os.path.exists(thing):
+        os.mkdir(thing)
 
+logging.basicConfig(filename=os.path.join(logs,"logs.txt"), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def main(target):
     target_list = target.split(" ")
     video_files = [f for f in os.listdir(videos) if os.path.isfile(os.path.join(videos, f))]
     try:
-        print("Running now...")
+        logging.info(f"Program was ran, with parameters {target}") 
         running = True
         paused = threading.Event()
         paused.set()
@@ -40,16 +42,19 @@ def main(target):
         
         def notification(target_name,sendQuote=True):
             vid = os.path.join(videos,random.choice(video_files))
-            # toast = Notification(app_id="App Monitor",title="Is this really where you want to be?",msg=f"""You tried opening {str(target_name)}\n{random.choice(quotes) if sendQuote else "" }""",icon=f"{os.path.join(os.path.dirname(__file__), 'assets', 'icon.png')}")
-            # toast.set_audio(audio.Mail, loop=False)
-            # print(toast.script)
-            # toast.show()
-            def run_video(window_title):
-                os.startfile(window_title)
-                time.sleep(0.5)
-                hwnd = win32gui.FindWindow(None, window_title)
-                if hwnd:
-                    win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+            def run_video(vid_path):
+                    os.startfile(vid_path)
+                    logging.info(f"{vid_path} was played.")
+                    time.sleep(0.5)
+                    hwnd = win32gui.FindWindow(None, vid_path)
+                    if hwnd:
+                            win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+                            shell = win32com.client.Dispatch("WScript.Shell")
+                            shell.sendkeys("%")
+                            win32gui.SetForegroundWindow(hwnd)
+                            logging.info("vlc focused")
+                            time.sleep(1.5)
+                            pyautogui.hotkey("ctrl","h")
             run_video(vid)
 
         def kill():
@@ -61,22 +66,26 @@ def main(target):
                         for child in process.children(recursive=True):
                             child.kill()
                         process.kill()
-                        print(f"fuck of noob, no {name} for you")
+                        logging.info(f"Program {name} was killed.")
                         notification({name},True)
                 except psutil.NoSuchProcess:
-                    print("Error")
+                    logging.error("Error")
                     pass
         
         def pause(icon,item):
             paused.clear()
             icon.notify("Paused", "Monitoring stopped")
+            logging.info("Program was paused.")
 
         def start(icon,item):
             paused.set()
             icon.notify("Started", "Monitoring started")
+            logging.info("Program was started.")
+
         def quit(icon,item):
             nonlocal running
             icon.stop()
+            logging.info("Program was exited.")
             sys.exit()
 
         def setup_tray():
@@ -91,11 +100,11 @@ def main(target):
 
         setup_tray()
     except Exception as e:
-        print("Error:",e)
-        print("Type:",type(e))
+        logging.error("Error:",e)
+        logging.error("Type:",type(e))
 
 if __name__ == "__main__":
-    main("roblox")
+    main("roblox gorebox minecraft")
 
 
 
