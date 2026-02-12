@@ -1,8 +1,25 @@
-# Amazon Dumper / Amazon Scraper
+# AmazonScraper
 
-A Python automation tool that scrapes product information from Amazon listings and stores the extracted data locally for analysis.
+A Python tool for scraping product data from Amazon for various regions and keywords.
 
-This project was built to practice real-world web scraping, HTTP request handling, HTML parsing, and data extraction workflows.
+## Features
+- Scrapes product listings and details from Amazon.
+- Supports multiple regions (e.g., India, United States).
+- Saves results in timestamped text files under `scrapes/`.
+
+## Usage
+- Configure your search parameters in `amazon_scraper.py`.
+- Run the script to generate scrape files.
+
+## Output
+- Scraped data is saved in the `scrapes/` directory, organized by region and keyword.
+
+## Requirements
+- Python 3.x
+- Requests, BeautifulSoup (see script for details)
+
+## Disclaimer
+This tool is for educational purposes. Use responsibly and respect Amazon's terms of service.
 
 ---
 
@@ -26,3 +43,4 @@ This project was built to practice real-world web scraping, HTTP request handlin
 
 ```bash
 pip install requests beautifulsoup4
+```

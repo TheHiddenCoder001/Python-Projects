@@ -248,3 +248,23 @@ Recommended workflow:
 
 For bugs, questions, or feature requests, open an issue in the project
 repository.
+
+# RobloxBadgeDumper
+
+A Python tool for dumping badge data for Roblox users.
+
+## Features
+- Fetches and stores badge data for specified Roblox users.
+- Outputs data in CSV and SQLite DB formats.
+- Organizes user data in `user_scrapes/` by username.
+
+## Usage
+- Run `robloxbadgedumper.py` and follow prompts or configure as needed.
+- Badge data is saved in `user_scrapes/<username>/`.
+
+## Requirements
+- Python 3.x
+- Requests (see script for details)
+
+## License
+For educational and personal use only.
