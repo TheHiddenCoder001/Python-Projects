@@ -6,22 +6,13 @@ import win32gui
 import win32con
 import win32com.client
 
-quotes = [
-    "You have power over your mind — not outside events. Realize this, and you will find strength.",
-    "He who has a why to live can bear almost any how.",
-    "Absorb what is useful, discard what is not, add what is uniquely your own.",
-    "In the midst of chaos, there is also opportunity.",
-    "Discipline is choosing between what you want now and what you want most.",
-    "Life is like riding a bicycle. To keep your balance, you must keep moving.",
-    "Luck is what happens when preparation meets opportunity.",
-    "Victory belongs to the most persevering."
-]
+
 
 videos = os.path.join(os.path.dirname(__file__),"assets","videos")
 logs = os.path.join(os.path.join(os.path.dirname(__file__),"logs"))
-for thing in [videos,logs]:
-    if not os.path.exists(thing):
-        os.mkdir(thing)
+for paths in [videos,logs]:
+    if not os.path.exists(paths):
+        os.mkdir(paths)
 
 def setup_logger(logging_directory):
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -55,14 +46,14 @@ def main(target):
             while running:
                 paused.wait()
                 kill()
-                time.sleep(0.5)
+                time.sleep(2)
         
         def notification(target_name,sendQuote=True):
             vid = os.path.join(videos,random.choice(video_files))
             def run_video(vid_path):
                     os.startfile(vid_path)
                     software_logger.info(f"{vid_path} was played.")
-                    time.sleep(0.5)
+                    time.sleep(1)
                     hwnd = win32gui.FindWindow(None, vid_path)
                     if hwnd:
                             win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
@@ -85,7 +76,7 @@ def main(target):
                             child.kill()
                         process.kill()
                         run_logger.info(f"Program {name} was killed.")
-                        notification({name},True)
+                        notification(name,True)
                 except psutil.NoSuchProcess:
                     run_logger.error("Error")
                     pass
@@ -120,6 +111,7 @@ def main(target):
     except Exception as e:
         software_logger.error("Error:",e)
         software_logger.error("Type:",type(e))
+        sys.exit()
 
 if __name__ == "__main__":
     main("roblox gorebox minecraft")
