@@ -5,3 +5,5 @@ test.py
 AppMonitor/tempCodeRunnerFile.py
 auth.json
 WebsiteScreenshot/data/webhook.txt
+AppMonitor/logs/run.log
+AppMonitor/logs/software.log
