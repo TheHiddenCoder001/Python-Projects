@@ -23,13 +23,30 @@ for thing in [videos,logs]:
     if not os.path.exists(thing):
         os.mkdir(thing)
 
-logging.basicConfig(filename=os.path.join(logs,"logs.txt"), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+def setup_logger(logging_directory):
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    run_logger = logging.getLogger('run_logger')
+    run_logger.setLevel(logging.INFO)
+    run_handler = logging.FileHandler(os.path.join(logging_directory, 'run.log'))
+    run_handler.setFormatter(formatter)
+    run_logger.addHandler(run_handler)
+    run_logger.propagate=False
+
+    software_logger = logging.getLogger('software_logger')
+    software_logger.setLevel(logging.INFO)
+    software_handler = logging.FileHandler(os.path.join(logging_directory, 'software.log'))
+    software_handler.setFormatter(formatter)
+    software_logger.addHandler(software_handler)
+    software_logger.propagate=False
+    return run_logger,software_logger
+run_logger, software_logger = setup_logger(logs)
+
 
 def main(target):
     target_list = target.split(" ")
     video_files = [f for f in os.listdir(videos) if os.path.isfile(os.path.join(videos, f))]
     try:
-        logging.info(f"Program was ran, with parameters {target}") 
+        software_logger.info(f"Program was ran, with parameters {target}") 
         running = True
         paused = threading.Event()
         paused.set()
@@ -44,7 +61,7 @@ def main(target):
             vid = os.path.join(videos,random.choice(video_files))
             def run_video(vid_path):
                     os.startfile(vid_path)
-                    logging.info(f"{vid_path} was played.")
+                    software_logger.info(f"{vid_path} was played.")
                     time.sleep(0.5)
                     hwnd = win32gui.FindWindow(None, vid_path)
                     if hwnd:
@@ -52,7 +69,7 @@ def main(target):
                             shell = win32com.client.Dispatch("WScript.Shell")
                             shell.sendkeys("%")
                             win32gui.SetForegroundWindow(hwnd)
-                            logging.info("vlc focused")
+                            software_logger.info("vlc focused")
                             time.sleep(1.5)
                             pyautogui.hotkey("ctrl","h")
             run_video(vid)
@@ -63,29 +80,30 @@ def main(target):
                 try:
                     name = process.info["name"].lower()
                     if any(target in name for target in target_list if target):
+                        run_logger.info(f"Program {name} was ran.")
                         for child in process.children(recursive=True):
                             child.kill()
                         process.kill()
-                        logging.info(f"Program {name} was killed.")
+                        run_logger.info(f"Program {name} was killed.")
                         notification({name},True)
                 except psutil.NoSuchProcess:
-                    logging.error("Error")
+                    run_logger.error("Error")
                     pass
         
         def pause(icon,item):
             paused.clear()
             icon.notify("Paused", "Monitoring stopped")
-            logging.info("Program was paused.")
+            software_logger.info("Program was paused.")
 
         def start(icon,item):
             paused.set()
             icon.notify("Started", "Monitoring started")
-            logging.info("Program was started.")
+            software_logger.info("Program was started.")
 
         def quit(icon,item):
             nonlocal running
             icon.stop()
-            logging.info("Program was exited.")
+            software_logger.info("Program was exited.")
             sys.exit()
 
         def setup_tray():
@@ -100,8 +118,8 @@ def main(target):
 
         setup_tray()
     except Exception as e:
-        logging.error("Error:",e)
-        logging.error("Type:",type(e))
+        software_logger.error("Error:",e)
+        software_logger.error("Type:",type(e))
 
 if __name__ == "__main__":
     main("roblox gorebox minecraft")
