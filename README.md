@@ -1,4 +1,4 @@
-# PythonNew
+# Python Projects
 
 This repository contains multiple Python projects and utilities. Each subfolder is a standalone project with its own purpose and documentation. Below is a summary of each project:
 
