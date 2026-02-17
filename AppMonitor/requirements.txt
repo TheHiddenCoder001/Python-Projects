@@ -1,0 +1,6 @@
+psutil
+pyautogui
+winotify
+pystray
+Pillow
+pywin32

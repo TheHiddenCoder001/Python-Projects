@@ -1,20 +1,45 @@
 # AppMonitor
 
-A Python application for monitoring and analyzing application activity, with support for video assets.
+A Python-based tool that **monitors specific applications**, **terminates them if detected**, and **plays a motivational video**.
+
+---
 
 ## Features
-- Monitors application status and activity.
-- Includes a collection of video assets for demonstration or analysis.
-- Can be compiled to an executable for easy distribution.
+
+### Main Application
+
+#### Monitoring
+- On first run, creates directories for logs and video assets.
+- Continuously monitors for applications matching predefined names.
+
+#### Processing
+- If a monitored application is detected:
+  - Terminates the full process tree.
+  - Plays a motivational video using the system’s default media player.
+
+#### Logging
+- Logs every detection and video playback event.
+- Enables debugging by tracking timestamps of actions.
+
+---
+
+## Taskbar Controls
+
+- **Pause**  
+  Pauses monitoring and logs the action.
+
+- **Start**  
+  Resumes monitoring and logs the action.
+
+- **Stop**  
+  Terminates the program and logs the action.  
+  > The program must be restarted manually after stopping.
+
+---
 
 ## Usage
-- Run `appmonitor.py` to start monitoring.
-- Video assets are located in `assets/videos/`.
-- Compiled executable available in `executable/`.
 
-## Requirements
-- Python 3.x
-- See `appmonitor.py` for dependencies.
+Run the script:
 
-## License
-For personal and educational use only.
+```bash
+python appmonitor.py
