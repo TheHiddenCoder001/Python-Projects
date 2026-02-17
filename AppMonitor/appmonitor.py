@@ -48,7 +48,7 @@ def main(target):
                 kill()
                 time.sleep(2)
         
-        def notification(target_name,sendQuote=True):
+        def motivate(target_name):
             vid = os.path.join(videos,random.choice(video_files))
             def run_video(vid_path):
                     os.startfile(vid_path)
@@ -76,7 +76,7 @@ def main(target):
                             child.kill()
                         process.kill()
                         run_logger.info(f"Program {name} was killed.")
-                        notification(name,True)
+                        motivate(name)
                 except psutil.NoSuchProcess:
                     run_logger.error("Error")
                     pass
