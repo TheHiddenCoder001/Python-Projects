@@ -1,0 +1,4 @@
+﻿requests
+tqdm
+winotify
+urllib3

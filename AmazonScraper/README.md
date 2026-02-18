@@ -1,46 +1,36 @@
-# AmazonScraper
+﻿# AmazonScraper
 
-A Python tool for scraping product data from Amazon for various regions and keywords.
+Scrapes Amazon search result pages for a query and region, then stores product snapshots and price history.
 
 ## Features
-- Scrapes product listings and details from Amazon.
-- Supports multiple regions (e.g., India, United States).
-- Saves results in timestamped text files under `scrapes/`.
-
-## Usage
-- Configure your search parameters in `amazon_scraper.py`.
-- Run the script to generate scrape files.
-
-## Output
-- Scraped data is saved in the `scrapes/` directory, organized by region and keyword.
+- Multi-region Amazon domain support
+- Cursor-like page traversal through result pagination
+- Product de-duplication by ASIN
+- SQLite storage for products and historical prices
+- Timestamped text exports in `scrapes/`
+- Desktop notification on completion (Windows)
 
 ## Requirements
-- Python 3.x
-- Requests, BeautifulSoup (see script for details)
-
-## Disclaimer
-This tool is for educational purposes. Use responsibly and respect Amazon's terms of service.
-
----
-
-## 🚀 Features
-
-- Scrapes Amazon product pages  
-- Extracts structured product data  
-- Uses HTTP headers and sessions  
-- Parses HTML content  
-- Supports automation for repeated runs  
-- Saves results locally  
-- Designed as a CLI-style script  
-
----
-
-## 📦 Requirements
-
 - Python 3.9+
+- Windows (notification and file-open behavior)
 
-### Install dependencies
+Install dependencies:
 
 ```bash
-pip install requests beautifulsoup4
+pip install -r requirements.txt
 ```
+
+## Usage
+
+```bash
+python amazon_scraper.py "wireless mouse" 3 us
+```
+
+Arguments:
+- `query` (required): Search term
+- `max_pages` (optional): Maximum pages to scan (default: `999`)
+- `region` (optional): Region code (default: `in`)
+
+## Output
+- Text export: `scrapes/<Region>_<query>_<timestamp>.txt`
+- SQLite database: `prices.db`

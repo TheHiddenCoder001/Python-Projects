@@ -1,19 +1,38 @@
-# SCPWikiDumper
+﻿# SCPWikiDumper
 
-A Python tool for downloading and archiving SCP Wiki articles and images.
+Downloads SCP Wiki entries and related page images for a numeric range.
 
 ## Features
-- Downloads SCP articles and associated images.
-- Organizes dumps by SCP number in the `dumps/` directory.
-- Supports batch downloading.
-
-## Usage
-- Run `SCPWikiDumper.py` to start downloading.
-- Articles and images are saved in `dumps/SCP-XXX/`.
+- Iterates from a start SCP number to an end SCP number
+- Saves page title/content into text files
+- Downloads images in parallel using a thread pool
+- Completion notification (Windows)
 
 ## Requirements
-- Python 3.x
-- Requests, BeautifulSoup (see script for details)
+- Python 3.10+
+- Windows (notification support)
 
-## Disclaimer
-For offline research and educational use. Respect the SCP Wiki's licensing and terms.
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+playwright install chromium
+```
+
+## Usage
+
+```bash
+python SCPWikiDumper.py <start> <end>
+```
+
+Example:
+
+```bash
+python SCPWikiDumper.py 1 10
+```
+
+## Output
+- Dump root: `dumps/`
+- Per-page folder: `dumps/<SCP title>/`
+- Text file: `<safe_title>.txt`
+- Images: `images/`

@@ -1,19 +1,35 @@
-# WebsiteScreenshot
+﻿# WebsiteScreenshot
 
-A Python utility for taking and storing screenshots of websites.
+Captures website screenshots on an interval and sends each image to a Discord webhook.
 
 ## Features
-- Captures screenshots of specified websites.
-- Stores screenshots in the `screenshots/` directory.
-- Supports webhook integration (see `data/webhook.txt`).
-
-## Usage
-- Run `websitescreenshot.py` and provide the target URL(s).
-- Screenshots are saved in `screenshots/`.
+- Headless Chromium screenshots via Playwright
+- Optional webhook persistence in `data/webhook.txt`
+- Repeating interval capture loop
+- Automatic retry path after runtime exceptions
 
 ## Requirements
-- Python 3.x
-- Selenium, Pillow, or other screenshot libraries (see script for details)
+- Python 3.10+
 
-## License
-For educational and personal use only.
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+playwright install chromium
+```
+
+## Usage
+
+```bash
+python websitescreenshot.py <site_url> [--webhook_url <url>] [--interval <seconds>]
+```
+
+Example:
+
+```bash
+python websitescreenshot.py https://example.com --webhook_url https://discord.com/api/webhooks/... --interval 60
+```
+
+## Output
+- Temporary screenshots are created in `screenshots/` and sent to the webhook.
+- Saved webhook (if provided): `data/webhook.txt`
