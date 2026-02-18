@@ -1,4 +1,4 @@
-﻿# PythonNew
+﻿# Python Projects
 
 This repository contains several standalone Python automation and scraping projects.
 Each folder includes its own script, dependencies, and README.
